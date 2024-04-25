@@ -10,7 +10,6 @@ let ratio, timeUpdate
 const wss = new WebSocket.Server({ server });
 let listServices = []
 let listUpdating = []
-let listOverriding = []
 let errorServices = []
 let pendingServices = []
 let removeServices = []
@@ -26,19 +25,19 @@ let selectedIndices = new Set();
 timeUpdate = 4500
 
 if(args[0] == 'normal'){
-    ratio = .5
+    ratio = .6
 } else if(args[0] == 'slow'){
-    ratio = .2
+    ratio = .4
 } else if(args[0] == 'error'){
-    ratio = .1
+    ratio = .2
 }
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         // console.log('Received message from client:', message);
         if(Array.isArray(JSON.parse(message.toString()).data) && Array.isArray(JSON.parse(message.toString()).updatingServices)){
-            listServices = JSON.parse(message.toString()).data
-            listUpdating = JSON.parse(message.toString()).updatingServices
-            listOverriding = JSON.parse(message.toString()).overriddenServices
+            listServices = [...JSON.parse(message.toString()).data]
+            listUpdating = [...JSON.parse(message.toString()).updatingServices]
+    
         } else{
             pending_time = JSON.parse(message.toString()).pending_time
             error_time = JSON.parse(message.toString()).fatal_time
@@ -50,7 +49,7 @@ wss.on('connection', (ws) => {
         () => {
     serviceData = []
         
-    const numServicesToGenerate = Math.floor(Math.random() * 6) + 1; // Generate between 1 and 10 services
+    const numServicesToGenerate = Math.floor(Math.random() * 7) + 1; // Generate between 1 and 10 services
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
@@ -80,7 +79,7 @@ wss.on('connection', (ws) => {
     //     return !errorServices.find(item=>item.id == service.id) && !removeServices.find(item=>item.id == service.id) && !listUpdating.find(item=>item.requestID == service.id) && !listPrevResponse.find(item=>item.requestID == service.id)
     // })
     let shuffledServices = listServices.filter(service=>{
-        return  !listUpdating.find(item=>item.requestID == service.id) && !listPrevResponse.find(item=>item.requestID == service.id) && !listOverriding.find(item=>item.requestID == service.id)
+        return  !listUpdating.find(item=>item.requestID == service.id) && !listPrevResponse.find(item=>item.requestID == service.id)
     })
     if(args[0] == 'slow'){
         shuffledServices = shuffledServices.filter(service=>{
@@ -118,8 +117,6 @@ let data2 = {
     dataError: errorServices,
     dataRemove: []
 }
-ramUsage = Math.floor(Math.random() * 70)+30;
-cpuUsage = Math.floor(Math.random() * 70)+30;
     selectedIndices.clear();
     listPrevResponse = [...listResponse]
     let data = {

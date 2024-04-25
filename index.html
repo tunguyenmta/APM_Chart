@@ -3222,11 +3222,100 @@
     <script src="./sh_soft_treemap.js"></script>
     <script src="./treemap_data.js"></script>
     <script src="./rxjs.js"></script>
-    <script src="./sh_soft_apm_chart_2.js"></script>
+    <script src="./sh_soft_apm_chart.js"></script>
     <script>
         const treemap = new TreemapChart(document.getElementById("chart-container"), data,{animateTime: 1200}).render()
     </script>
-
+    <!-- <script>
+      // Your modified JavaScript code goes here...
+      // For simplicity, let's assume the APMChart class is defined in apm-chart.js
+      
+      // JavaScript code for WebSocket communication
+      let socket = null; // Declare socket variable outside the function scope
+      const chart =  new APMChart('chart-container2', {pending_time: 10000, fatal_time: 15000}).render();
+      let intervalID
+      
+      function handleVisibilityChange() {
+          if (document.hidden) {
+              if (socket) {
+                  socket.send(JSON.stringify({
+                      data: []
+                  }))
+                  chart.stopAnimation()
+                  socket.close();
+                  socket = null; 
+                  clearInterval(intervalID)
+              }
+          } else {
+              if (!socket) {
+                  chart.startAnimation()
+                  socket = new WebSocket('ws://localhost:3000'); // Reconnect if socket is closed
+                  setupSocketListeners(); // Set up event listeners for the new socket
+                  intervalID = setInterval(() => {
+              if (socket && socket.readyState === WebSocket.OPEN) {
+                  socket.send(JSON.stringify({
+                      data: chart.slotGroup.flatMap(slot => slot.list)
+                  }));
+              }
+          }, 1000);
+              }
+          }
+      }
+      
+      function setupSocketListeners() {
+          socket.addEventListener('open', () => {
+            socket.send(JSON.stringify({
+              pending_time: chart.pending_time,
+              fatal_time: chart.fatal_time
+          }))
+              console.log('WebSocket connection established');
+          });
+          
+          socket.addEventListener('message', (event) => {
+              const { dataNew, dataResponse, ramUsage, cpuUsage } = JSON.parse(event.data);
+              if(dataNew){
+                chart.startGeneratingServices(dataNew);
+                chart.updateServiceResponse(dataResponse);
+                chart.updateProgressBar(ramUsage, cpuUsage)
+              }
+              if(JSON.parse(event.data).dataPending?.length>0){
+                chart.updateStateInterval(JSON.parse(event.data).dataPending, JSON.parse(event.data).dataError, JSON.parse(event.data).dataRemove)
+              }
+       
+          });
+      
+          socket.addEventListener('close', () => {
+              console.log('WebSocket connection closed');
+              socket = null; // Reset socket when closed
+            
+          });
+      
+          socket.addEventListener('error', (error) => {
+              console.error('WebSocket error:', error);
+          });
+      }
+      
+      function startInterval() {
+          document.addEventListener('visibilitychange', handleVisibilityChange);
+          
+          if (!socket) {
+              socket = new WebSocket('ws://localhost:3000');
+              setupSocketListeners();
+          }
+      
+          intervalID = setInterval(() => {
+              if (socket && socket.readyState === WebSocket.OPEN) {
+                  socket.send(JSON.stringify({
+                      data: chart.slotGroup.flatMap(slot => slot.list)
+                  }));
+              }
+          }, 1000);
+      }
+      
+      // Your D3 chart rendering code goes here...
+      
+      startInterval();
+      </script> -->
       <script>
         let socket = null; 
         const chart = new APMChart('chart-container2', {pending_time: 15000, fatal_time: 20000, isTestMode: true}).render();
@@ -3247,15 +3336,6 @@
                 if (!socket) {
                     chart.startAnimation();
                     initializeWebSocket();
-                    intervalID = setInterval(() => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
-                        data: chart.slotGroup.flatMap(slot => slot.list),
-                        updatingServices: chart.updatingServices,
-                        overriddenServices: chart.overriddenServices
-                    }));
-                }
-            }, 5);
           //           intervalID = setInterval(() => {
           //     if (socket && socket.readyState === WebSocket.OPEN) {
           //         socket.send(JSON.stringify({
@@ -3276,10 +3356,9 @@
             }
           if(!socket && !document.hidden){
             socket = new WebSocket('ws://localhost:3000');
-            socket.onopen = () => {
-            chart.setSocket(socket);  // Set the socket for the chart here
-        };
+            
             setupSocketListeners();
+            
                   
           }
             
@@ -3287,7 +3366,6 @@
     
         function setupSocketListeners() {
             socket.addEventListener('open', () => {
-              console.log(socket)
               chart.setSocket(socket)
               disconnectTime = 0;
 
@@ -3298,8 +3376,7 @@
                 console.log('WebSocket connection established');
                 socket.send(JSON.stringify({
                       data: chart.slotGroup.flatMap(slot => slot.list),
-                      updatingServices: chart.updatingServices,
-                      overriddenServices: chart.overriddenServices
+                      updatingServices: chart.updatingServices
                   }));
             });
     
@@ -3311,11 +3388,11 @@
                 // console.table(dataResponse)
                 if (dataNew) {
                     chart.startGeneratingServices(dataNew);
-                  // setTimeout(()=>{
-                  //   chart.updateServiceResponse(dataResponse);
-
-                  // }, 0)
-                    chart.updateServiceResponse(dataResponse);
+                    setTimeout(()=>{
+                      chart.updateServiceResponse(dataResponse);
+                    }, 1000)
+           
+                    // chart.updateServiceResponse(dataResponse);
                     chart.updateProgressBar(ramUsage, cpuUsage);
                     chart.updateStateInterval(data2.dataPending, data2.dataError, data2.dataRemove);
                 }
@@ -3350,8 +3427,7 @@
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
                         data: chart.slotGroup.flatMap(slot => slot.list),
-                        updatingServices: chart.updatingServices,
-                        overriddenServices: chart.overriddenServices
+                        updatingServices: chart.updatingServices
                     }));
                 }
             }, 5);

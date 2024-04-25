@@ -22,8 +22,8 @@ class APMChart {
         this.stopTime
         this.activeServices = [];
         this.overriddenServices = [];
-        this.waiting_services = []
         this.isTestMode = options?.isTestMode ? options.isTestMode : false; 
+        this.overriddenServices1 = []
     }
     resetChart(){
                 this.slotGroup.forEach((slot, index) => {
@@ -862,11 +862,7 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                     })    
                 }
             }
-            
-        
-            
-        
-       
+     
     }
 
  
@@ -955,6 +951,7 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
             
     //     } 
     //     else{
+
     //         entity.transition().ease(ease).duration(time).attr(key, value).on('end',()=>{
     //               d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
     //             if(this.overriddenServices.length > 0){
@@ -983,17 +980,10 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
     //     }
     //     }    
     // }
-
     animationAttr(entity, key, value, time = 200, ease = d3.easeLinear, type, service) {
-        if (!entity)
+        if(!entity)
             return;
         entity.transition().ease(ease).duration(time).attr(key, value)
-        if(this.isTestMode){
-            this.socket?.send(JSON.stringify({
-                data: this.slotGroup.flatMap(slot => slot.list),
-                updatingServices: this.updatingServices
-            }))
-        }
     }
     animationAttr3(entity, key, value, time = 200, ease = d3.easeLinear, type, service) {
         if (!entity)
@@ -1005,33 +995,163 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                     }
                 })
         } 
-        if(type == 'delete' && value == '0'){
-            entity.transition().ease(ease).duration(time).attr(key, value).on('end', ()=>{
-                d3.select(entity.node().parentNode).selectAll('g').remove()
-                d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
-                console.log(service)
-                console.table(this.slotGroup)
-                this.slotGroup.find(slot => slot.service == service.name).service = ''
-                
-            })
-            // entity.transition().ease(ease).duration(time).attr(key, value).on('end', ()=>{
-            //     d3.select(entity.node().parentNode).selectAll('g').remove()
-            //     d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
-            //     this.slotGroup.find(slot => slot.service == service.name).service = ''
-            // })
-        } else if(d3.select(entity.node()).attr('class') == 'counting-animation'){
-            // console.log(service, this.slotGroup.find(slot=>slot.service == service.name))
+        if(!Array.isArray(service)){
+            if(type == 'remove' && value == 1){
+                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>{
+                    if(this.overriddenServices.length>0){
+                        this.overriddenServices.forEach((d,i)=>{
+                            this.pending_services = this.pending_services.filter(item => item.id !== d.requestID);
+                            this.fatal_services = this.fatal_services.filter(item => item.id !== d.requestID);
+                            this.remove_services = this.remove_services.filter(item => item.id !== d.requestID);
+                            if(this.slotGroup.find(slot => slot.service == service.name)){
+                                this.slotGroup.find(slot => slot.service == service.name).list =this.slotGroup.find(slot => slot.service == service.name).list.filter(item => item.id !== d.requestID);
+                                
+                            }
+                        })
+                        this.overriddenServices = this.overriddenServices.filter(item => {
+        
+                            return item.name != service.name}) 
 
-        }
-       
+                    }
+                    let count = this.slotGroup.find(slot => slot.service == service.name).list.length
+                    this.slotGroup.find(slot => slot.service == service.name).list = this.slotGroup.find(slot => slot.service == service.name).list.filter(item => item.id != service.requestID)
+                    this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
+                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
+                    this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
+                    if(count == 0){
+                        let temp = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                            return d3.select(this).text() == service.name   
+                        }).node().parentNode.parentNode)
+                        let matchingSlot = this.slotGroup.find(slot => slot.service == service.name)
+                        let groupX = matchingSlot.x
+                        let groupY = matchingSlot.y
+
+                        let activeGroup = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                            return d3.select(this).text() == service.name   
+                        }).node().parentNode.parentNode).select('.active-group')
+                        d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                            return d3.select(this).text() == service.name   
+                        }).node().parentNode.parentNode).select('.groupDrawing').attr('on-removing', 1)
+                        const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');
+                        this.activeAnimation(animationGroup, { x: groupX + 32, y:groupY + 10 });
+                        this.activeAnimation(animationGroup, { x: groupX + 120,y:groupY + 44 });
+
+                        activeGroup.attr('opacity', 0)
+                        animationGroup.attr('opacity', 0)
+                        activeGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
+                        animationGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
+                        temp.select('.groupDrawing').attr('on-removing', 0)
+                        if(temp.select('.counter').size()){
+                            temp.select('.counter').select('g').transition().duration(500).attr('opacity', 0)
+                        }
+                 
+                        temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
+                        setTimeout(()=>{
+                            temp.selectAll('g').remove()
+                            this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        }, 500)
+                        // this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        // temp.selectAll('g').remove()
+                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
+             
+                    } 
+                    else if(count == 1 ){
+                        d3.select(entity.node().parentNode).select('g').attr('opacity', 0)  
+                        setTimeout(()=>{
+                            d3.select(entity.node().parentNode).remove()
+                        }, 1000)
+
+                    }
+                    else if(count > 1){
+                        if( d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                            d3.select(entity.node().parentNode).select('text').text(this.slotGroup.find(slot => slot.service == service.name).list.length)
+                        }
+                    }
+                    this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
+                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
+                    if(this.isTestMode){
+                        this.socket?.send(JSON.stringify({
+                            data: this.slotGroup.flatMap(slot => slot.list),
+                            updatingServices: this.updatingServices
+                        }))
+                    }
+                    
+                })
+               
+            } 
+            else if(type == 'delete' && value == '0'){
+                
+                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>{
+                    if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
+                        if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                            d3.select(entity.node().parentNode).attr('opacity', 0)
+                        }
+                        d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0)
+                        d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
+                    }
+                }).on('end', ()=>{
+                    if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
+                        if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                            d3.select(entity.node().parentNode).attr('opacity', 0)
+                        }
+                        d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0).remove()
+                        d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
+                        let tempArr = this.slotGroup.find(slot => slot.service == service.name).list.filter(item=>{
+                            return item.id != service.requestID
+                        })
+                        // console.log('1', entity.node().parentNode, service.name)
+                        d3.select(entity.node().parentNode).selectAll('g').remove()
+                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                        this.slotGroup.find(slot => slot.service == service.name).list = []
+                        this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        if(tempArr.length > 0){
+                            tempArr.forEach((d,i)=>{
+                                this.performAction(d)
+                            })
+                        }
+                        
+                    }
+                    else {
+                        // console.log('2', entity.node(), service.name)
+                        d3.select(entity.node().parentNode).selectAll('g').remove()
+                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                        if(this.slotGroup.find(slot => slot.service == service.name)){
+                            this.slotGroup.find(slot => slot.service == service.name).list = []
+                            this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        } else {
+                            // console.log('3', service.name, service.requestID)
+                            this.slotGroup.flatMap(slot=>slot.list).filter(item => item.name != service.name)
+                            this.slotGroup.filter(slot => slot.service != service.name)
+                        }
+                    }
+                   
+                    this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
+                    this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
+                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
+                    this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
+                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
+
+                    if(this.isTestMode){
+                        this.socket?.send(JSON.stringify({
+                            data: this.slotGroup.flatMap(slot => slot.list),
+                            updatingServices: this.updatingServices
+                        }))
+                    }
+                    
+                })
+          
+            } 
+           
+
+    }
 }
 
 
     startGeneratingServices = function(data)  {
         // Generate new services by the client at a regular interval
         this.serviceList.push(...data)
-        // d3.select('.web-container').raise()
-        // d3.select('#slot-group').raise()
+        d3.select('.web-container').raise()
+        d3.select('#slot-group').raise()
         if(!this.stateAnimation){
             for (let i = 0; i < data.length; i++) {
              
@@ -1333,8 +1453,6 @@ returnService(service) {
 
 }
     removeSlotService(service) {
-        let temp
-        let gGroupChosen
         let index = -1
         const matchingSlot = this.slotGroup.find((slot,i) =>{
 
@@ -1343,46 +1461,40 @@ returnService(service) {
         if(!matchingSlot){
             return
         }
-  
 
-        const groupX = matchingSlot.x;
-        const groupY = matchingSlot.y;
-        this.slotGroup.find(slot=>slot.service == service.name).list = this.slotGroup.find(slot=>slot.service == service.name).list.filter(item=>{
-            return item.id != service.requestID
-        })
-        temp = d3.select('#slot-group').selectAll(`.slot-rect`).filter(function(d,i){ return i == index})
+        const groupX = matchingSlot?.x;
+        const groupY = matchingSlot?.y;
+        let temp = d3.select('#slot-group').selectAll(`.slot-rect`).filter(function(d,i){ return i == index})
 
-        gGroupChosen = d3.select('#slot-group').selectAll(`.slot-rect`).filter(function(d,i){ return i == index}).select('.active-group')
-
+        let gGroupChosen = d3.select('#slot-group').selectAll(`.slot-rect`).filter(function(d,i){ return i == index}).select('.active-group')
         if(gGroupChosen.node() && d3.select(gGroupChosen.node().parentNode)){
-            if(this.slotGroup.find(slot => slot.service == service.name).list.length == 0){
+            if(this.slotGroup.find(slot => slot.service == service.name).list.length <= 1){
+                d3.select(gGroupChosen.node().parentNode).select('.groupDrawing').attr('on-removing', 1)
                 const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');
-          
+            // if(d3.select(gGroupChosen.node().parentNode).attr('class').split(' ').length < 2){
                 this.activeAnimation(animationGroup, { x: groupX + 32, y:groupY + 10 });
                 this.activeAnimation(animationGroup, { x: groupX + 120,y:groupY + 44 });
+            // }
             
             gGroupChosen.attr("opacity", 0);
-            animationGroup.attr("opacity", 0); 
-            // temp.attr('class', 'slot-rect is-removing')
-    
+            animationGroup.attr("opacity", 0);    
             this.showActive3(gGroupChosen, animationGroup, 'delete', service);
             } 
             else{ 
-                console.log(temp.node())
                 const headerAnimationGroup = temp.select('.counting-animation')
-                // if(d3.select(headerAnimationGroup.node()).attr('class') == 'counting-animation'){
-                //     this.activeAnimation(headerAnimationGroup, { x: 2, y: 2 });
-                //     this.activeAnimation(headerAnimationGroup, { x: 25, y: 15 });
-                //     this.playHeaderAnimation1(headerAnimationGroup, service);
-                //     this.slotGroup.find((slot)=> slot.service == service.name).list = this.slotGroup.find((slot)=> slot.service == service.name).list.filter(item => item.id != service.requestID) 
-                // }
+                if(d3.select(headerAnimationGroup.node()).attr('class') == 'counting-animation'){
+
+                    this.activeAnimation(headerAnimationGroup, { x: 2, y: 2 });
+                    this.activeAnimation(headerAnimationGroup, { x: 25, y: 15 });
+                    this.playHeaderAnimation1(headerAnimationGroup, service);
+                }
                
             }         
         }
     }
 
     showActive3(activeGroup, animationGroup, type, service) {
-        this.animationAttr3(activeGroup, "opacity", 1, 500,d3.easeLinear,type, service);
+          this.animationAttr3(activeGroup, "opacity", 1, 500,d3.easeLinear,type, service);
           this.animationAttr3(animationGroup, "opacity", 1, 500, d3.easeLinear,'none', service);
           d3.select(activeGroup.node().parentNode).select('.groupDrawing').transition().duration(500).attr('opacity', 0)
       rxjs.timer(500).subscribe((d) => {
@@ -1441,13 +1553,26 @@ returnService(service) {
             }); 
         }
        
+
+        // Check if g chosen has already added groupDrawing
         const isGroupDrawingAdded = gGroupChosen.select('.groupDrawing').size() > 0;
+        if( d3.select(gGroupChosen.node()).attr('class').split(' ').includes('isFatalAnimating')){
+            return
+        }
         if (isGroupDrawingAdded) {
             if(gGroupChosen.select('.counter').size() > 0){
                 gGroupChosen.select('.counter').remove();
             }
-            
-            const groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', 'counter')
+            let groupDrawing
+            // if(gGroupChosen.select('.groupDrawing').node().getAttribute('on-removing')){
+                if(gGroupChosen.select('.groupDrawing').node().getAttribute('on-removing')){
+                     groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', 'counter')
+                    groupDrawing.attr('opacity', 0)
+
+                } else {
+                    groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', 'counter')
+
+                }
             
             this.createNotification(service, groupDrawing);
             
@@ -1544,7 +1669,7 @@ const title = this.createSVG(groupDrawing, {
     y: 27,
 }).attr('class', 'name-rect')
 this.setTextShadow(title);
-// this.createNotification(service, groupDrawing);
+this.createNotification(service, groupDrawing);
 this.createPin(groupDrawing, 147, 43);
 const animationGroup = this.createGroup(gGroupChosen);
 if(d3.select(gGroupChosen.node().parentNode)){
@@ -1560,19 +1685,28 @@ if(d3.select(gGroupChosen.node().parentNode)){
 activeGroup.attr("opacity", 0);
 animationGroup.attr("opacity", 0);
 groupDrawing.attr("opacity", 0);
-
 this.showActive(activeGroup, animationGroup, '',service);
         }
 
     }
+  
     showActive(activeGroup, animationGroup, type, service) {
-
+        
           this.animationAttr(activeGroup, "opacity", 1, 500,d3.easeLinear,type, service);
             this.animationAttr(animationGroup, "opacity", 1, 500, d3.easeLinear,'none', service);
         rxjs.timer(500).subscribe((d) => {
-            d3.select(activeGroup.node().parentNode).select('.groupDrawing').transition().duration(500).attr('opacity', 1)
-            this.animationAttr(activeGroup, "opacity", 0, 500, d3.easeLinear,type, service);
-            this.animationAttr(animationGroup, "opacity", 0, 500, d3.easeLinear,'none', service);
+            if(d3.select(activeGroup.node().parentNode).select('.groupDrawing').node()){
+                if(!d3.select(activeGroup.node().parentNode).select('.groupDrawing')?.attr('on-removing')){
+                    d3.select(activeGroup.node().parentNode).select('.groupDrawing').transition().duration(500).attr('opacity', 1)
+                    this.animationAttr(activeGroup, "opacity", 0, 500, d3.easeLinear,type, service);
+                    this.animationAttr(animationGroup, "opacity", 0, 500, d3.easeLinear,'none', service);
+                }
+            } else{
+                d3.select(activeGroup.node().parentNode).select('.groupDrawing').transition().duration(500).attr('opacity', 1)
+                this.animationAttr(activeGroup, "opacity", 0, 500, d3.easeLinear,type, service);
+                this.animationAttr(animationGroup, "opacity", 0, 500, d3.easeLinear,'none', service);
+            }
+           
         });
 
         
@@ -1656,7 +1790,7 @@ this.showActive(activeGroup, animationGroup, '',service);
             text: count,
             fontSize: 10,
             fontWeight: "bold",
-            x: count < 10 ? 11 : 8,
+            x: 11,
             y: 11.5,
             fill: 'white',
             opacity: 0,
@@ -1949,9 +2083,4 @@ this.showActive(activeGroup, animationGroup, '',service);
         
     }
 
-    // stopGeneratingServices() {
-    //     if (this.serviceGenerationSubscription) {
-    //         this.serviceGenerationSubscription.unsubscribe();
-    //     }
-    // }
 }
