@@ -1,8 +1,11 @@
 const express = require('express');
 const WebSocket = require('ws');
-
+const http = require('http');
 const app = express();
-const server = app.listen(3000, () => {
+app.use(express.static(__dirname));
+const server = http.createServer(app);
+
+app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
 const args = process.argv.slice(2)
@@ -143,6 +146,6 @@ cpuUsage = Math.floor(Math.random() * 70)+30;
 
 
 
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
-});
+// app.get('/', (req, res) => {
+//     res.send('Hello, World!');
+// });

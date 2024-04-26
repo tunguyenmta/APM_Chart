@@ -3318,7 +3318,7 @@
       </script> -->
       <script>
         let domain = "https://apm-chart.vercel.app/"
-        domain = "https://apm-chart.vercel.app/"
+        domain = "localhost:3000"
         let socket = null; 
         const chart = new APMChart('chart-container2', {pending_time: 15000, fatal_time: 20000, isTestMode: true}).render();
         let intervalID;
@@ -3357,7 +3357,7 @@
             disconnectTime++;
             }
           if(!socket && !document.hidden){
-            socket = new WebSocket(`wss:${domain}`);
+            socket = new WebSocket(`ws:${domain}`);
             
             setupSocketListeners();
             
