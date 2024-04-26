@@ -1046,12 +1046,12 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         }
                  
                         temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
-                        setTimeout(()=>{
-                            temp.selectAll('g').remove()
-                            this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        }, 500)
-                        // this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        // temp.selectAll('g').remove()
+                        // setTimeout(()=>{
+                        //     temp.selectAll('g').remove()
+                        //     this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        // }, 500)
+                        this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        temp.selectAll('g').remove()
                         this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
              
                     } 

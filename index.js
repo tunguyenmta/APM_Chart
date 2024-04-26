@@ -22,7 +22,7 @@ listPrevResponse = []
 let ramUsage = Math.floor(Math.random() * 70)+30;
 let cpuUsage = Math.floor(Math.random() * 70)+30;
 let selectedIndices = new Set();
-timeUpdate = 4500
+timeUpdate = 2500
 
 if(args[0] == 'normal'){
     ratio = .6
@@ -117,6 +117,8 @@ let data2 = {
     dataError: errorServices,
     dataRemove: []
 }
+ramUsage = Math.floor(Math.random() * 70)+30;
+cpuUsage = Math.floor(Math.random() * 70)+30;
     selectedIndices.clear();
     listPrevResponse = [...listResponse]
     let data = {
