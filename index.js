@@ -1,5 +1,5 @@
 const express = require('express');
-const WebSocket = require('ws');
+const { WebSocketServer } = require('ws');
 const http = require('http');
 const app = express();
 app.use(express.static(__dirname));
@@ -10,7 +10,7 @@ app.listen(3000, () => {
 });
 const args = process.argv.slice(2)
 let ratio, timeUpdate
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 let listServices = []
 let listUpdating = []
 let errorServices = []
