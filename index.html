@@ -3318,7 +3318,8 @@
       </script> -->
       <script>
         let domain = "https://apm-chart.vercel.app/"
-        domain = "localhost:3000"
+        domain = "apm-chart.onrender.com"
+
         let socket = null; 
         const chart = new APMChart('chart-container2', {pending_time: 15000, fatal_time: 20000, isTestMode: true}).render();
         let intervalID;
@@ -3357,7 +3358,7 @@
             disconnectTime++;
             }
           if(!socket && !document.hidden){
-            socket = new WebSocket(`ws:${domain}`);
+            socket = new WebSocket(`wss:${domain}`);
             
             setupSocketListeners();
             
@@ -3390,11 +3391,11 @@
                 // console.table(dataResponse)
                 if (dataNew) {
                     chart.startGeneratingServices(dataNew);
-                    setTimeout(()=>{
-                      chart.updateServiceResponse(dataResponse);
-                    }, 1000)
+                    // setTimeout(()=>{
+                    //   chart.updateServiceResponse(dataResponse);
+                    // }, 1000)
            
-                    // chart.updateServiceResponse(dataResponse);
+                    chart.updateServiceResponse(dataResponse);
                     chart.updateProgressBar(ramUsage, cpuUsage);
                     chart.updateStateInterval(data2.dataPending, data2.dataError, data2.dataRemove);
                 }
