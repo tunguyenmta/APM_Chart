@@ -23,7 +23,7 @@ listPrevResponse = []
 let ramUsage = Math.floor(Math.random() * 70)+30;
 let cpuUsage = Math.floor(Math.random() * 70)+30;
 let selectedIndices = new Set();
-timeUpdate = 2500
+timeUpdate = 4500
 
 if(args[0] == 'normal'){
     ratio = .6
