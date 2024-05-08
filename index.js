@@ -23,12 +23,12 @@ listPrevResponse = []
 let ramUsage = Math.floor(Math.random() * 70)+30;
 let cpuUsage = Math.floor(Math.random() * 70)+30;
 let selectedIndices = new Set();
-timeUpdate = 2500
+timeUpdate = 3500
 
 if(args[0] == 'normal'){
     ratio = .6
 } else if(args[0] == 'slow'){
-    ratio = .25
+    ratio = .2
 } else if(args[0] == 'error'){
     ratio = .1
 }
