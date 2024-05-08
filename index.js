@@ -28,7 +28,7 @@ timeUpdate = 3500
 if(args[0] == 'normal'){
     ratio = .6
 } else if(args[0] == 'slow'){
-    ratio = .2
+    ratio = .4
 } else if(args[0] == 'error'){
     ratio = .1
 }
