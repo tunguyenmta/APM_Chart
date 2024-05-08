@@ -28,9 +28,9 @@ timeUpdate = 3500
 if(args[0] == 'normal'){
     ratio = .6
 } else if(args[0] == 'slow'){
-    ratio = .4
-} else if(args[0] == 'error'){
     ratio = .2
+} else if(args[0] == 'error'){
+    ratio = .1
 }
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
@@ -50,7 +50,7 @@ wss.on('connection', (ws) => {
         () => {
     serviceData = []
         
-    const numServicesToGenerate = Math.floor(Math.random() * 8) + 1; // Generate between 1 and 10 services
+    const numServicesToGenerate = Math.floor(Math.random() * 6) + 1; // Generate between 1 and 10 services
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
