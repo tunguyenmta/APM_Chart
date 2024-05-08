@@ -25,6 +25,13 @@ class APMChart {
         this.isTestMode = options?.isTestMode ? options.isTestMode : false; 
         this.overriddenServices1 = []
     }
+    handleData(data){
+        const { dataNew, dataResponse, ramUsage, cpuUsage ,data2} = data
+        this.startGeneratingServices(dataNew);
+        this.updateServiceResponse(dataResponse);
+        this.updateProgressBar(ramUsage, cpuUsage);
+        this.updateStateInterval(data2.dataPending, data2.dataError, data2.dataRemove);
+    }
     resetChart(){
                 this.slotGroup.forEach((slot, index) => {
                     slot.list = []
@@ -988,10 +995,12 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
     animationAttr3(entity, key, value, time = 200, ease = d3.easeLinear, type, service) {
         if (!entity)
             return;
+        let arr = []
+       
         if(service.state == 'response'){
                 entity.transition().ease(ease).duration(time).attr(key, value).on('interrupt', ()=>{
                     if(!this.overriddenServices.find(item=>item.requestID == service.requestID)){
-                        this.overriddenServices.push(service)
+                        // this.overriddenServices.push(service)
                     }
                 })
         } 
@@ -1013,12 +1022,15 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                             return item.name != service.name}) 
 
                     }
-                    let count = this.slotGroup.find(slot => slot.service == service.name).list.length
                     this.slotGroup.find(slot => slot.service == service.name).list = this.slotGroup.find(slot => slot.service == service.name).list.filter(item => item.id != service.requestID)
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
-                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
-                    if(count == 0){
+                    if(this.slotGroup.find(slot => slot.service == service.name).list.length == 0){
+                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
+                        // if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                        //     // console.log('here', service.requestID)
+                        // }
+                        // this.slotGroup.find(slot => slot.service == service.name).list.push(service)
                         this.removeSlotService(service)
                         // let temp = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
                         //     return d3.select(this).text() == service.name   
@@ -1047,23 +1059,33 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         // }
                  
                         // temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
+                        // // rxjs.timer(500).subscribe(()=>{})
                         // // setTimeout(()=>{
                         // //     temp.selectAll('g').remove()
                         // //     this.slotGroup.find(slot => slot.service == service.name).service = ''
                         // // }, 500)
                         // this.slotGroup.find(slot => slot.service == service.name).service = ''
                         // temp.selectAll('g').remove()
-                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
              
                     } 
-                    else if(count == 1 ){
-                        d3.select(entity.node().parentNode).select('g').attr('opacity', 0)  
-                        setTimeout(()=>{
-                            d3.select(entity.node().parentNode).remove()
-                        }, 1000)
+                    else if(this.slotGroup.find(slot => slot.service == service.name).list.length == 1 ){
+                        d3.select(entity.node().parentNode).select('g').attr('opacity', 0)
+                        d3.select(entity.node().parentNode).transition().duration(500).ease(d3.easeLinear).attr('opacity', 1)
+                        rxjs.timer(500).subscribe(()=>{
+                            d3.select(entity.node().parentNode).transition().duration(500).ease(d3.easeLinear).attr('opacity', 0).on('end', ()=>{
+                                d3.select(entity.node().parentNode).remove()
+                            })
+                        })
+                        // entity.transition().duration(500).ease(d3.easeLinear).attr('opacity', 1)
+                        // rxjs.timer(500).subscribe(()=>{
 
+                        // })
+                        
+                        // setTimeout(()=>{
+                            
+                        // }, 500)
                     }
-                    else if(count > 1){
+                    else if(this.slotGroup.find(slot => slot.service == service.name).list.length > 1){
                         if( d3.select(entity.node().parentNode).attr('class') == 'counter'){
                             d3.select(entity.node().parentNode).select('text').text(this.slotGroup.find(slot => slot.service == service.name).list.length)
                         }
@@ -1081,8 +1103,8 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                
             } 
             else if(type == 'delete' && value == '0'){
-                
-                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>{
+                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>
+                    {
                     if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
                         if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
                             d3.select(entity.node().parentNode).attr('opacity', 0)
@@ -1090,59 +1112,101 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0)
                         d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
                     }
-                }).on('end', ()=>{
-                    if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
-                        if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
-                            d3.select(entity.node().parentNode).attr('opacity', 0)
+                }
+            ).on('end', ()=>{
+                    // if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
+                    //     if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                    //         d3.select(entity.node().parentNode).attr('opacity', 0)
+                    //     }
+                        
+                    //     d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0).remove()
+                    //     d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
+                    //     let tempArr = this.slotGroup.find(slot => slot.service == service.name)?.list.filter(item=>{
+                    //         return item.id != service.requestID
+                    //     })
+                    //     d3.select(entity.node().parentNode).selectAll('g').remove()
+                    //     d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                    //     this.slotGroup.find(slot => slot.service == service.name).list = []
+                    //     this.slotGroup.find(slot => slot.service == service.name).service = ''
+                    //     if(tempArr.length > 0){
+                    //         tempArr.forEach((d,i)=>{
+                    //             this.performAction(d)
+                    //         })
+                    //     }
+                        
+                    // }
+                    // else {
+                    //     d3.select(entity.node().parentNode).selectAll('g').remove()
+                    //     d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                    //     let tempArr =[]
+                    //     if(this.slotGroup.find(slot => slot.service == service.name)?.list.length > 0){
+                    //         tempArr = this.slotGroup.find(slot => slot.service == service.name)?.list.filter(item=>{
+                    //             return item.id != service.requestID
+                    //         })
+                    //     }
+
+                    //     if(this.slotGroup.find(slot => slot.service == service.name)){
+                    //         this.slotGroup.find(slot => slot.service == service.name).list = []
+                    //         this.slotGroup.find(slot => slot.service == service.name).service = ''
+                    //     } 
+                    //     if(tempArr.length > 0 && !this.slotGroup.find(slot => slot.service == service.name)){
+                    //         tempArr.forEach((d,i)=>{
+                    //             this.performAction(d)
+                    //         })
+                    //     }   
+
+                    //     // else {
+                    //     //     this.slotGroup.flatMap(slot=>slot.list).filter(item => item.name != service.name)
+                    //     //     this.slotGroup.filter(slot => slot.service != service.name)
+                    //     //     if(tempArr.length > 0){
+                    //     //         tempArr.forEach((d,i)=>{
+                    //     //             console.log('2',d.name, d.id)
+                    //     //             this.performAction(d)
+                    //     //         })
+                    //     //     }   
+
+                    //     // }
+                        
+                    // }
+                    d3.select(entity.node().parentNode).selectAll('g').remove()
+                    d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                 
+                    if(this.slotGroup.find(slot=>slot.service == service.name)){
+                        if(this.slotGroup.find(slot=>slot.service == service.name).list.length > 0){
+                            this.slotGroup.find(slot=>slot.service == service.name).list.forEach(d=>{
+                                
+                                if(!arr.find(item=>item.id == d.id) && d.id != service.requestID){
+                                    arr.push(d)
+                                }
+                            })
                         }
-                        d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0).remove()
-                        d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
-                        let tempArr = this.slotGroup.find(slot => slot.service == service.name).list.filter(item=>{
-                            return item.id != service.requestID
-                        })
-                        // console.log('1', entity.node().parentNode, service.name)
-                        d3.select(entity.node().parentNode).selectAll('g').remove()
-                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
                         this.slotGroup.find(slot => slot.service == service.name).list = []
                         this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        if(tempArr.length > 0){
-                            tempArr.forEach((d,i)=>{
-                                this.performAction(d)
-                            })
-                        }
-                        
+                    } else {
+                        return
                     }
-                    else {
-                        // console.log('2', entity.node(), service.name)
-                        d3.select(entity.node().parentNode).selectAll('g').remove()
-                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
-                        console.log(this.slotGroup.find(slot => slot.service == service.name).list)
-                        let tempArr = []
-                        if(this.slotGroup.find(slot => slot.service == service.name).list.length > 0){
-                            tempArr = this.slotGroup.find(slot => slot.service == service.name).list.filter(item=>{
-                                return item.id != service.requestID
-                            })
-                        }
-                        if(this.slotGroup.find(slot => slot.service == service.name)){
-                            this.slotGroup.find(slot => slot.service == service.name).list = []
-                            this.slotGroup.find(slot => slot.service == service.name).service = ''
-                            if(tempArr.length > 0){
-                                tempArr.forEach(d=>{
-                                    this.performAction(d)
-                                })
-                            }
-                        } 
-                        // else {
-                        //     // console.log('3', service.name, service.requestID)
-                        //     this.slotGroup.flatMap(slot=>slot.list).filter(item => item.name != service.name)
-                        //     this.slotGroup.filter(slot => slot.service != service.name)
-                        // }
-                        
-                    }
+                  
                    
+                    if(arr.length > 0){
+                        if(d3.selectAll('.groupDrawing').filter(function(d,i){
+                            return d3.select(this).select('text').text() == service.name
+                        }).size() > 0){
+                            d3.select(d3.selectAll('.groupDrawing').filter(function(d,i){
+                                return d3.select(this).select('text').text() == service.name
+                            }).node().parentNode).selectAll('.remove-animation').remove()
+                            d3.select(d3.selectAll('.groupDrawing').filter(function(d,i){
+                                return d3.select(this).select('text').text() == service.name
+                            }).node().parentNode).selectAll('g').remove()
+                           
+                        }
+                        arr.forEach(d=>{
+                            if(!this.slotGroup.flatMap(slot=>slot.list).find(item=>item.id == d.id)){
+                                this.performAction(d)
+                            }
+                        })
+                    }
                     this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
-                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
                     this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
 
@@ -1164,12 +1228,11 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
 
     startGeneratingServices = function(data)  {
         // Generate new services by the client at a regular interval
-        this.serviceList.push(...data)
+        // this.serviceList.push(...data)
         d3.select('.web-container').raise()
         d3.select('#slot-group').raise()
         if(!this.stateAnimation){
             for (let i = 0; i < data.length; i++) {
-             
                 this.createService(data[i]);
             }
             return this
@@ -1338,103 +1401,105 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         this.animationAttr1(rectNotiLayout, 'fill', d3.color('#d85741').darker(2), 200)
                     }
                 } 
-                else if(dataRemove?.find(service=>{
-                    return service.name == slot.service
-                }))
-                {  
-                    let rectChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 0) 
-                    this.animationAttr1(rectChosen, 'fill', 'url("#white_red_gradient")', 200)
-                    let rectBackground = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 1)
+        //         else if(dataRemove?.find(service=>{
+        //             return service.name == slot.service
+        //         }))
+        //         {  
+        //             let rectChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 0) 
+        //             this.animationAttr1(rectChosen, 'fill', 'url("#white_red_gradient")', 200)
+        //             let rectBackground = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 1)
                       
-                    this.animationAttr1(rectBackground, 'fill', 'url("#redGradient")', 200)
+        //             this.animationAttr1(rectBackground, 'fill', 'url("#redGradient")', 200)
                  
-                    let rectBackgroundBlur =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 2)
-                    this.animationAttr1(rectBackgroundBlur, 'fill', d3.color('#d85741').darker(1), 200)
-                    if(d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).attr('class').split(' ').length > 1){
-                        d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                            return ind == i
-                        }).select('.active-group').interrupt()
-                        return
-                    }
-                    let textChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.groupDrawing').select('text')
-                    this.animationAttr1(textChosen, 'fill', 'url("#redGradient")', 200)
-                    let counterChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.counter').selectAll('rect')
-                    this.animationAttr1(counterChosen, 'fill', 'url("#redGradient")', 200)
-                    let temp = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    })
-                    let gGroupChosen = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                        return ind == i
-                    }).select('.active-group')
+        //             let rectBackgroundBlur =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.groupDrawing').selectAll('rect').filter((d,i)=> i == 2)
+        //             this.animationAttr1(rectBackgroundBlur, 'fill', d3.color('#d85741').darker(1), 200)
+        //             if(d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).attr('class').split(' ').length > 1){
+        //                 d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                     return ind == i
+        //                 }).select('.active-group').interrupt()
+        //                 return
+        //             }
+        //             let textChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.groupDrawing').select('text')
+        //             this.animationAttr1(textChosen, 'fill', 'url("#redGradient")', 200)
+        //             let counterChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.counter').selectAll('rect')
+        //             this.animationAttr1(counterChosen, 'fill', 'url("#redGradient")', 200)
+        //             let temp = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             })
+        //             let gGroupChosen = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                 return ind == i
+        //             }).select('.active-group')
                         
-                    const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');   
+        //             const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');   
         
-                this.showActive1(gGroupChosen, animationGroup, 'delete', []);
-                let fatalSlot = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                    return ind == i
-                }).select('.groupDrawing')
+        //         this.showActive1(gGroupChosen, animationGroup, 'delete', []);
+        //         let fatalSlot = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //             return ind == i
+        //         }).select('.groupDrawing')
          
-                d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                    return ind == i
-                }).attr('class', 'slot-rect isFatalAnimating')
-                let fatalCounter = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                    return ind == i
-                }).select('.counter')
+        //         d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //             return ind == i
+        //         }).attr('class', 'slot-rect isFatalAnimating')
+        //         let fatalCounter = d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //             return ind == i
+        //         }).select('.counter')
         
                
                 
                 
-                this.updatingServices = this.updatingServices.filter(item => item.name != slot.list[0]?.name);
+        //         this.updatingServices = this.updatingServices.filter(item => item.name != slot.list[0]?.name);
             
-                    let groupAnimation =  d3.select('#space-ship-g').selectAll('.space-ship-animation')
-                    // groupAnimation.interrupt();
-                    groupAnimation.each(function(d,i){
-                        if(d3.select(this).select('text').text() == slot.list[0]?.name){
-                            d3.select(d3.select(this).node().parentNode).select('.left-hole').interrupt().attr('opacity', 0)
-                            d3.select(d3.select(this).node().parentNode).select('.right-hole').interrupt().attr('opacity', 0)
+        //             let groupAnimation =  d3.select('#space-ship-g').selectAll('.space-ship-animation')
+        //             // groupAnimation.interrupt();
+        //             groupAnimation.each(function(d,i){
+        //                 if(d3.select(this).select('text').text() == slot.list[0]?.name){
+        //                     d3.select(d3.select(this).node().parentNode).select('.left-hole').interrupt().attr('opacity', 0)
+        //                     d3.select(d3.select(this).node().parentNode).select('.right-hole').interrupt().attr('opacity', 0)
                        
-                            d3.select(this).interrupt().remove()
+        //                     d3.select(this).interrupt().remove()
 
-                        }
-                    })
-                    this.remove_services = this.remove_services.filter(item => {
-                        return item.name != slot.list[0]?.name})
+        //                 }
+        //             })
+        //             this.remove_services = this.remove_services.filter(item => {
+        //                 return item.name != slot.list[0]?.name})
             
                    
-                    setTimeout(() =>{
+        //             setTimeout(() =>{
     
-                        d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                            return ind == i
-                        }).selectAll('g').remove()
-                        d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
-                            return ind == i
-                        }).attr('class', 'slot-rect')
-                        this.remove_services = this.remove_services.filter(item => item.name != slot.list[0]?.name)
-                        this.slotGroup.find((slot,ind) => ind == i).list = []
-                        this.slotGroup.find((slot,ind) => ind == i).service = ''
-                        if(this.isTestMode){
-                            this.socket?.send(JSON.stringify({
-                                data: this.slotGroup.flatMap(slot => slot.list),
-                                updatingServices: this.updatingServices
-                            }))
-                        }
+        //                 d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                     return ind == i
+        //                 }).selectAll('g').remove()
+        //                 d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
+        //                     return ind == i
+        //                 }).attr('class', 'slot-rect')
+        //                 this.remove_services = this.remove_services.filter(item => item.name != slot.list[0]?.name)
+        //                 this.slotGroup.find((slot,ind) => ind == i).list = []
+        //                 this.slotGroup.find((slot,ind) => ind == i).service = ''
+        //                 if(this.isTestMode){
+        //                     this.socket?.send(JSON.stringify({
+        //                         data: this.slotGroup.flatMap(slot => slot.list),
+        //                         updatingServices: this.updatingServices
+        //                     }))
+        //                 }
                        
-                    }, 1000)
+        //             }, 1000)
                     
                 
-        }}
+        // }
+    
+    }
 
     })
     }
@@ -1486,13 +1551,11 @@ returnService(service) {
             if(this.slotGroup.find(slot => slot.service == service.name).list.length <= 1){
                 d3.select(gGroupChosen.node().parentNode).select('.groupDrawing').attr('on-removing', 1)
                 const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');
-            // if(d3.select(gGroupChosen.node().parentNode).attr('class').split(' ').length < 2){
                 this.activeAnimation(animationGroup, { x: groupX + 32, y:groupY + 10 });
                 this.activeAnimation(animationGroup, { x: groupX + 120,y:groupY + 44 });
-            // }
             
             gGroupChosen.attr("opacity", 0);
-            animationGroup.attr("opacity", 0);    
+            animationGroup.attr("opacity", 0);   
             this.showActive3(gGroupChosen, animationGroup, 'delete', service);
             } 
             else{ 
@@ -1530,7 +1593,25 @@ returnService(service) {
            
         });
     }
-
+    deepCopy(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            // If obj is not an object or is null, return it as is
+            return obj;
+        }
+    
+        // Create an empty object or array to hold the copied properties
+        const copy = Array.isArray(obj) ? [] : {};
+    
+        // Iterate over each property of the original object
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                // Recursively copy nested objects or arrays
+                copy[key] = this.deepCopy(obj[key]);
+            }
+        }
+    
+        return copy;
+    }
     performAction(service) {
         let index = 0
         let matchingSlot = this.slotGroup.find((slot,i) =>{
@@ -1538,7 +1619,9 @@ returnService(service) {
             return slot.service == service.name}
         );
         let gSlotGroup = d3.select('#slot-group').selectAll(`.slot-rect`)
-      
+        if(this.slotGroup.flatMap(slot => slot.list).find(item => item.id == service.id)){
+            return
+        }
         
         let gGroupChosen
         let groupX = 0, groupY = 0;
@@ -1548,9 +1631,7 @@ returnService(service) {
             gGroupChosen = gSlotGroup.filter(function(d,i){
                 return i == index
             })
-            matchingSlot.list.push({...service,
-                ['serverCreatedAt']: new Date().getTime()
-            });
+            matchingSlot.list.push({...service});
         
         } else {
             matchingSlot = this.slotGroup.find((slot, i) => {
@@ -1563,25 +1644,21 @@ returnService(service) {
             gGroupChosen = gSlotGroup.filter(function(d,i){ return i == index})
             groupX = matchingSlot.x;
             groupY = matchingSlot.y;
-            matchingSlot.list.push({...service,
-                ['serverCreatedAt']: new Date().getTime()
-            }); 
+            matchingSlot.list.push({...service}); 
         }
-       
+
 
         // Check if g chosen has already added groupDrawing
-        const isGroupDrawingAdded = gGroupChosen.select('.groupDrawing').size() > 0;
-        if( d3.select(gGroupChosen.node()).attr('class').split(' ').includes('isFatalAnimating')){
-            return
-        }
-        if (isGroupDrawingAdded) {
+        let isGroupDrawingAdded = gGroupChosen.select('.groupDrawing').size() > 0;
+
+        if (isGroupDrawingAdded && matchingSlot.list.length > 1) {
+
             if(gGroupChosen.select('.counter').size() > 0){
                 gGroupChosen.select('.counter').remove();
             }
             let groupDrawing
-            // if(gGroupChosen.select('.groupDrawing').node().getAttribute('on-removing')){
                 if(gGroupChosen.select('.groupDrawing').node().getAttribute('on-removing')){
-                     groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', 'counter')
+                    groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', 'counter')
                     groupDrawing.attr('opacity', 0)
 
                 } else {
@@ -1593,6 +1670,10 @@ returnService(service) {
             
         } 
         else {
+            if(gGroupChosen.selectAll('g').size() > 0){
+                gGroupChosen.selectAll('g').remove()
+
+            }
             const groupDrawing = this.createGroup(gGroupChosen, {x: groupX +5, y: groupY+5}).attr('class', `groupDrawing`)
 const backgroundGroup = this.createSVG(groupDrawing, {
     type: 'rect',
@@ -1748,11 +1829,13 @@ this.showActive(activeGroup, animationGroup, '',service);
 
 
     createNotification(service, groupDrawing) {
-     
-        let count = this.slotGroup.find(slot => slot.list[0]?.name == service.name).list.length;
+        let count = this.slotGroup.find(slot => slot.service == service.name).list.length;
         let classList = d3.select(groupDrawing.node().parentNode).attr('class').split(' ');
-
-        if (count < 2) return; 
+        if (count < 2) 
+        {           
+         
+            return
+        } 
 
         
         let rectNotiLayoutBack = d3.color("#4374D9").darker(2), rectNotiLayout = d3.color("#4374D9").darker(1)
