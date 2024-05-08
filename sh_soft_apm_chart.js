@@ -988,10 +988,12 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
     animationAttr3(entity, key, value, time = 200, ease = d3.easeLinear, type, service) {
         if (!entity)
             return;
+        let arr = []
+       
         if(service.state == 'response'){
                 entity.transition().ease(ease).duration(time).attr(key, value).on('interrupt', ()=>{
                     if(!this.overriddenServices.find(item=>item.requestID == service.requestID)){
-                        this.overriddenServices.push(service)
+                        // this.overriddenServices.push(service)
                     }
                 })
         } 
@@ -1013,56 +1015,70 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                             return item.name != service.name}) 
 
                     }
-                    let count = this.slotGroup.find(slot => slot.service == service.name).list.length
                     this.slotGroup.find(slot => slot.service == service.name).list = this.slotGroup.find(slot => slot.service == service.name).list.filter(item => item.id != service.requestID)
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
-                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
-                    if(count == 0){
-                        let temp = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
-                            return d3.select(this).text() == service.name   
-                        }).node().parentNode.parentNode)
-                        let matchingSlot = this.slotGroup.find(slot => slot.service == service.name)
-                        let groupX = matchingSlot.x
-                        let groupY = matchingSlot.y
+                    if(this.slotGroup.find(slot => slot.service == service.name).list.length == 0){
+                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
+                        // if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                        //     // console.log('here', service.requestID)
+                        // }
+                        // this.slotGroup.find(slot => slot.service == service.name).list.push(service)
+                        this.removeSlotService(service)
+                        // let temp = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                        //     return d3.select(this).text() == service.name   
+                        // }).node().parentNode.parentNode)
+                        // let matchingSlot = this.slotGroup.find(slot => slot.service == service.name)
+                        // let groupX = matchingSlot.x
+                        // let groupY = matchingSlot.y
 
-                        let activeGroup = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
-                            return d3.select(this).text() == service.name   
-                        }).node().parentNode.parentNode).select('.active-group')
-                        d3.select(d3.selectAll('.name-rect').filter(function(d,i){
-                            return d3.select(this).text() == service.name   
-                        }).node().parentNode.parentNode).select('.groupDrawing').attr('on-removing', 1)
-                        const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');
-                        this.activeAnimation(animationGroup, { x: groupX + 32, y:groupY + 10 });
-                        this.activeAnimation(animationGroup, { x: groupX + 120,y:groupY + 44 });
+                        // let activeGroup = d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                        //     return d3.select(this).text() == service.name   
+                        // }).node().parentNode.parentNode).select('.active-group')
+                        // d3.select(d3.selectAll('.name-rect').filter(function(d,i){
+                        //     return d3.select(this).text() == service.name   
+                        // }).node().parentNode.parentNode).select('.groupDrawing').attr('on-removing', 1)
+                        // const animationGroup = this.createGroup(temp).attr('class', 'remove-animation');
+                        // this.activeAnimation(animationGroup, { x: groupX + 32, y:groupY + 10 });
+                        // this.activeAnimation(animationGroup, { x: groupX + 120,y:groupY + 44 });
 
-                        activeGroup.attr('opacity', 0)
-                        animationGroup.attr('opacity', 0)
-                        activeGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
-                        animationGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
-                        temp.select('.groupDrawing').attr('on-removing', 0)
-                        if(temp.select('.counter').size()){
-                            temp.select('.counter').select('g').transition().duration(500).attr('opacity', 0)
-                        }
+                        // activeGroup.attr('opacity', 0)
+                        // animationGroup.attr('opacity', 0)
+                        // activeGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
+                        // animationGroup.transition().ease(d3.easeLinear).duration(500).attr('opacity', 1)
+                        // temp.select('.groupDrawing').attr('on-removing', 0)
+                        // if(temp.select('.counter').size()){
+                        //     temp.select('.counter').select('g').transition().duration(500).attr('opacity', 0)
+                        // }
                  
-                        temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
-                        setTimeout(()=>{
-                            temp.selectAll('g').remove()
-                            this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        }, 500)
+                        // temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
+                        // // rxjs.timer(500).subscribe(()=>{})
+                        // // setTimeout(()=>{
+                        // //     temp.selectAll('g').remove()
+                        // //     this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        // // }, 500)
                         // this.slotGroup.find(slot => slot.service == service.name).service = ''
                         // temp.selectAll('g').remove()
-                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
              
                     } 
-                    else if(count == 1 ){
-                        d3.select(entity.node().parentNode).select('g').attr('opacity', 0)  
-                        setTimeout(()=>{
-                            d3.select(entity.node().parentNode).remove()
-                        }, 1000)
+                    else if(this.slotGroup.find(slot => slot.service == service.name).list.length == 1 ){
+                        d3.select(entity.node().parentNode).select('g').attr('opacity', 0)
+                        d3.select(entity.node().parentNode).transition().duration(500).ease(d3.easeLinear).attr('opacity', 1)
+                        rxjs.timer(500).subscribe(()=>{
+                            d3.select(entity.node().parentNode).transition().duration(500).ease(d3.easeLinear).attr('opacity', 0).on('end', ()=>{
+                                d3.select(entity.node().parentNode).remove()
+                            })
+                        })
+                        // entity.transition().duration(500).ease(d3.easeLinear).attr('opacity', 1)
+                        // rxjs.timer(500).subscribe(()=>{
 
+                        // })
+                        
+                        // setTimeout(()=>{
+                            
+                        // }, 500)
                     }
-                    else if(count > 1){
+                    else if(this.slotGroup.find(slot => slot.service == service.name).list.length > 1){
                         if( d3.select(entity.node().parentNode).attr('class') == 'counter'){
                             d3.select(entity.node().parentNode).select('text').text(this.slotGroup.find(slot => slot.service == service.name).list.length)
                         }
@@ -1080,8 +1096,8 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                
             } 
             else if(type == 'delete' && value == '0'){
-                
-                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>{
+                entity.transition().ease(ease).duration(time).attr(key, value).on('start', ()=>
+                    {
                     if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
                         if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
                             d3.select(entity.node().parentNode).attr('opacity', 0)
@@ -1089,45 +1105,101 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0)
                         d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
                     }
-                }).on('end', ()=>{
-                    if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
-                        if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
-                            d3.select(entity.node().parentNode).attr('opacity', 0)
-                        }
-                        d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0).remove()
-                        d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
-                        let tempArr = this.slotGroup.find(slot => slot.service == service.name).list.filter(item=>{
-                            return item.id != service.requestID
-                        })
-                        // console.log('1', entity.node().parentNode, service.name)
-                        d3.select(entity.node().parentNode).selectAll('g').remove()
-                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
-                        this.slotGroup.find(slot => slot.service == service.name).list = []
-                        this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        if(tempArr.length > 0){
-                            tempArr.forEach((d,i)=>{
-                                this.performAction(d)
+                }
+            ).on('end', ()=>{
+                    // if(d3.select(entity.node().parentNode).select('.counting-animation').size()){
+                    //     if(d3.select(entity.node().parentNode).attr('class') == 'counter'){
+                    //         d3.select(entity.node().parentNode).attr('opacity', 0)
+                    //     }
+                        
+                    //     d3.select(entity.node().parentNode).select('.counting-animation').attr('opacity', 0).remove()
+                    //     d3.select(entity.node().parentNode).select('.counting-animation').interrupt()
+                    //     let tempArr = this.slotGroup.find(slot => slot.service == service.name)?.list.filter(item=>{
+                    //         return item.id != service.requestID
+                    //     })
+                    //     d3.select(entity.node().parentNode).selectAll('g').remove()
+                    //     d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                    //     this.slotGroup.find(slot => slot.service == service.name).list = []
+                    //     this.slotGroup.find(slot => slot.service == service.name).service = ''
+                    //     if(tempArr.length > 0){
+                    //         tempArr.forEach((d,i)=>{
+                    //             this.performAction(d)
+                    //         })
+                    //     }
+                        
+                    // }
+                    // else {
+                    //     d3.select(entity.node().parentNode).selectAll('g').remove()
+                    //     d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                    //     let tempArr =[]
+                    //     if(this.slotGroup.find(slot => slot.service == service.name)?.list.length > 0){
+                    //         tempArr = this.slotGroup.find(slot => slot.service == service.name)?.list.filter(item=>{
+                    //             return item.id != service.requestID
+                    //         })
+                    //     }
+
+                    //     if(this.slotGroup.find(slot => slot.service == service.name)){
+                    //         this.slotGroup.find(slot => slot.service == service.name).list = []
+                    //         this.slotGroup.find(slot => slot.service == service.name).service = ''
+                    //     } 
+                    //     if(tempArr.length > 0 && !this.slotGroup.find(slot => slot.service == service.name)){
+                    //         tempArr.forEach((d,i)=>{
+                    //             this.performAction(d)
+                    //         })
+                    //     }   
+
+                    //     // else {
+                    //     //     this.slotGroup.flatMap(slot=>slot.list).filter(item => item.name != service.name)
+                    //     //     this.slotGroup.filter(slot => slot.service != service.name)
+                    //     //     if(tempArr.length > 0){
+                    //     //         tempArr.forEach((d,i)=>{
+                    //     //             console.log('2',d.name, d.id)
+                    //     //             this.performAction(d)
+                    //     //         })
+                    //     //     }   
+
+                    //     // }
+                        
+                    // }
+                    d3.select(entity.node().parentNode).selectAll('g').remove()
+                    d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
+                 
+                    if(this.slotGroup.find(slot=>slot.service == service.name)){
+                        if(this.slotGroup.find(slot=>slot.service == service.name).list.length > 0){
+                            this.slotGroup.find(slot=>slot.service == service.name).list.forEach(d=>{
+                                
+                                if(!arr.find(item=>item.id == d.id) && d.id != service.requestID){
+                                    arr.push(d)
+                                }
                             })
                         }
-                        
+                        this.slotGroup.find(slot => slot.service == service.name).list = []
+                        this.slotGroup.find(slot => slot.service == service.name).service = ''
+                    } else {
+                        return
                     }
-                    else {
-                        // console.log('2', entity.node(), service.name)
-                        d3.select(entity.node().parentNode).selectAll('g').remove()
-                        d3.select(entity.node().parentNode).selectAll('.remove-animation').remove()
-                        if(this.slotGroup.find(slot => slot.service == service.name)){
-                            this.slotGroup.find(slot => slot.service == service.name).list = []
-                            this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        } else {
-                            // console.log('3', service.name, service.requestID)
-                            this.slotGroup.flatMap(slot=>slot.list).filter(item => item.name != service.name)
-                            this.slotGroup.filter(slot => slot.service != service.name)
-                        }
-                    }
+                  
                    
+                    if(arr.length > 0){
+                        if(d3.selectAll('.groupDrawing').filter(function(d,i){
+                            return d3.select(this).select('text').text() == service.name
+                        }).size() > 0){
+                            d3.select(d3.selectAll('.groupDrawing').filter(function(d,i){
+                                return d3.select(this).select('text').text() == service.name
+                            }).node().parentNode).selectAll('.remove-animation').remove()
+                            d3.select(d3.selectAll('.groupDrawing').filter(function(d,i){
+                                return d3.select(this).select('text').text() == service.name
+                            }).node().parentNode).selectAll('g').remove()
+                           
+                        }
+                        arr.forEach(d=>{
+                            if(!this.slotGroup.flatMap(slot=>slot.list).find(item=>item.id == d.id)){
+                                this.performAction(d)
+                            }
+                        })
+                    }
                     this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
-                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
                     this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
 
@@ -1145,6 +1217,7 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
 
     }
 }
+
 
 
     startGeneratingServices = function(data)  {
