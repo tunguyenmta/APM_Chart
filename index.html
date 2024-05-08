@@ -3346,6 +3346,14 @@
                     }));
                 }
             }, 5);
+                    intervalID = setInterval(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        data: chart.slotGroup.flatMap(slot => slot.list),
+                        updatingServices: chart.updatingServices
+                    }));
+                }
+            }, 5);
                 }
             }
         }
@@ -3357,6 +3365,7 @@
             disconnectTime++;
             }
           if(!socket && !document.hidden){
+            socket = new WebSocket(`wss:${domain}`);
             socket = new WebSocket('ws://localhost:3000');
             
             setupSocketListeners();
@@ -3390,11 +3399,11 @@
                 // console.table(dataResponse)
                 if (dataNew) {
                     chart.startGeneratingServices(dataNew);
-                    setTimeout(()=>{
-                      chart.updateServiceResponse(dataResponse);
-                    }, 1000)
+                    // setTimeout(()=>{
+                    //   chart.updateServiceResponse(dataResponse);
+                    // }, 1000)
            
-                    // chart.updateServiceResponse(dataResponse);
+                    chart.updateServiceResponse(dataResponse);
                     chart.updateProgressBar(ramUsage, cpuUsage);
                     chart.updateStateInterval(data2.dataPending, data2.dataError, data2.dataRemove);
                 }

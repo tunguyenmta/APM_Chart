@@ -1,13 +1,14 @@
 const express = require('express');
-const WebSocket = require('ws');
-
+const { WebSocketServer } = require('ws');
+const http = require('http');
 const app = express();
-const server = app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-});
+app.use(express.static(__dirname));
+const server = http.createServer(app);
+
+
 const args = process.argv.slice(2)
 let ratio, timeUpdate
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 let listServices = []
 let listUpdating = []
 let errorServices = []
@@ -139,10 +140,12 @@ cpuUsage = Math.floor(Math.random() * 70)+30;
     });
 });
 
-
-
-
-
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
+server.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });
+
+
+
+// app.get('/', (req, res) => {
+//     res.send('Hello, World!');
+// });

@@ -1052,13 +1052,13 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                         // }
                  
                         // temp.select('.groupDrawing').transition().duration(500).attr('opacity', 0)
-                        // // rxjs.timer(500).subscribe(()=>{})
-                        // // setTimeout(()=>{
-                        // //     temp.selectAll('g').remove()
-                        // //     this.slotGroup.find(slot => slot.service == service.name).service = ''
-                        // // }, 500)
+                        // setTimeout(()=>{
+                        //     temp.selectAll('g').remove()
+                        //     this.slotGroup.find(slot => slot.service == service.name).service = ''
+                        // }, 500)
                         // this.slotGroup.find(slot => slot.service == service.name).service = ''
                         // temp.selectAll('g').remove()
+                        this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
              
                     } 
                     else if(this.slotGroup.find(slot => slot.service == service.name).list.length == 1 ){
@@ -1069,14 +1069,7 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                                 d3.select(entity.node().parentNode).remove()
                             })
                         })
-                        // entity.transition().duration(500).ease(d3.easeLinear).attr('opacity', 1)
-                        // rxjs.timer(500).subscribe(()=>{
-
-                        // })
-                        
-                        // setTimeout(()=>{
-                            
-                        // }, 500)
+                      
                     }
                     else if(this.slotGroup.find(slot => slot.service == service.name).list.length > 1){
                         if( d3.select(entity.node().parentNode).attr('class') == 'counter'){
