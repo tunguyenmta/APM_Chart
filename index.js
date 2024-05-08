@@ -23,7 +23,7 @@ listPrevResponse = []
 let ramUsage = Math.floor(Math.random() * 70)+30;
 let cpuUsage = Math.floor(Math.random() * 70)+30;
 let selectedIndices = new Set();
-timeUpdate = 4500
+timeUpdate = 2500
 
 if(args[0] == 'normal'){
     ratio = .6
@@ -50,11 +50,11 @@ wss.on('connection', (ws) => {
         () => {
     serviceData = []
         
-    const numServicesToGenerate = Math.floor(Math.random() * 7) + 1; // Generate between 1 and 10 services
+    const numServicesToGenerate = Math.floor(Math.random() * 2) + 1; // Generate between 1 and 10 services
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
-            name: `서비스 ${Math.floor(Math.random() * 20)+1}`, // Randomly assign service name between 'Service 1' to 'Service 20'
+            name: `서비스 ${Math.floor(Math.random() * 1)+1}`, // Randomly assign service name between 'Service 1' to 'Service 20'
             state: 'new',
             createdAt: new Date().getTime(),
             serverCreatedAt: new Date().getTime()+ Math.floor(Math.random() * 2000) + 2000,
