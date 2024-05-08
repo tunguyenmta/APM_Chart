@@ -50,7 +50,7 @@ wss.on('connection', (ws) => {
         () => {
     serviceData = []
         
-    const numServicesToGenerate = Math.floor(Math.random() * 6) + 1; // Generate between 1 and 10 services
+    const numServicesToGenerate = Math.floor(Math.random() * 7) + 1; // Generate between 1 and 10 services
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
