@@ -1782,6 +1782,7 @@ activeGroup.attr("opacity", 0);
 animationGroup.attr("opacity", 0);
 groupDrawing.attr("opacity", 0);
 this.showActive(activeGroup, animationGroup, '',service);
+this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
         }
 
     }
