@@ -3365,7 +3365,7 @@
             disconnectTime++;
             }
           if(!socket && !document.hidden){
-            socket = new WebSocket(`ws:${domain}`);
+            socket = new WebSocket(`wss:${domain}`);
             
             setupSocketListeners();
             
