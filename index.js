@@ -54,7 +54,7 @@ wss.on('connection', (ws) => {
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
-            name: `서비스 ${Math.floor(Math.random() * 1)+1}`, // Randomly assign service name between 'Service 1' to 'Service 20'
+            name: `서비스 ${Math.floor(Math.random() * 20)+1}`, // Randomly assign service name between 'Service 1' to 'Service 20'
             state: 'new',
             createdAt: new Date().getTime(),
             serverCreatedAt: new Date().getTime()+ Math.floor(Math.random() * 2000) + 2000,
