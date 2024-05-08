@@ -3319,6 +3319,7 @@
       <script>
         let domain = "https://apm-chart.vercel.app/"
         domain = "apm-chart.onrender.com"
+        // domain = "localhost:3000"
         let socket = null; 
         const chart = new APMChart('chart-container2', {pending_time: 15000, fatal_time: 20000, isTestMode: true}).render();
         let intervalID;
@@ -3366,6 +3367,7 @@
             }
           if(!socket && !document.hidden){
             socket = new WebSocket(`wss:${domain}`);
+            // socket = new WebSocket(`ws://${domain}`);
             
             setupSocketListeners();
             

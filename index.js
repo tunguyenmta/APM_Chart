@@ -28,7 +28,7 @@ timeUpdate = 2500
 if(args[0] == 'normal'){
     ratio = .6
 } else if(args[0] == 'slow'){
-    ratio = .2
+    ratio = .25
 } else if(args[0] == 'error'){
     ratio = .1
 }
@@ -62,14 +62,17 @@ wss.on('connection', (ws) => {
         serviceData.push(service)
     }
     listResponse = []
-    pendingServices = listServices.filter((service)=>{
-        return new Date().getTime() - service.serverCreatedAt > pending_time && new Date().getTime() - service.serverCreatedAt < error_time
-    })
+    if(listServices.length > 0) {
+        pendingServices = listServices.filter((service)=>{
+            return new Date().getTime() - service.serverCreatedAt > pending_time && new Date().getTime() - service.serverCreatedAt < error_time
+        })
+        
+        
+        errorServices = listServices.filter((service)=>{
+            return new Date().getTime() - service.serverCreatedAt > error_time  
+        })
+    }
     
-    
-    errorServices = listServices.filter((service)=>{
-        return new Date().getTime() - service.serverCreatedAt > error_time  
-    })
 
 
     // removeServices = listServices.filter((service)=>{

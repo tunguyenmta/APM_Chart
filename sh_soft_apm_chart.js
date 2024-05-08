@@ -1024,6 +1024,7 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                     }
                     this.slotGroup.find(slot => slot.service == service.name).list = this.slotGroup.find(slot => slot.service == service.name).list.filter(item => item.id != service.requestID)
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
+                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
                     if(this.slotGroup.find(slot => slot.service == service.name).list.length == 0){
                         this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
@@ -1090,8 +1091,9 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                             d3.select(entity.node().parentNode).select('text').text(this.slotGroup.find(slot => slot.service == service.name).list.length)
                         }
                     }
+
                     this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
-                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
+                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, this.slotGroup)
                     if(this.isTestMode){
                         this.socket?.send(JSON.stringify({
                             data: this.slotGroup.flatMap(slot => slot.list),
@@ -1205,10 +1207,12 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                             }
                         })
                     }
+
                     this.updatingServices = this.updatingServices.filter(item => item.requestID != service.requestID);
                     this.pending_services = this.pending_services.filter(item => item.id !== service.requestID);
+                    this.fatal_services = this.fatal_services.filter(item => item.id !== service.requestID);    
                     this.remove_services = this.remove_services.filter(item => item.id !== service.requestID);
-                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, [...this.slotGroup])
+                    this.updateStateColor(this.pending_services, this.fatal_services, this.remove_services, this.slotGroup)
 
                     if(this.isTestMode){
                         this.socket?.send(JSON.stringify({
@@ -1370,9 +1374,9 @@ this.asyncAnimationTransform(group, resultX, 5, service.state == 'response' ? se
                 })) && !(dataRemove?.find(service=>{
                     return service.name == slot.service
                 }))){
-                    this.fatal_services.push([...slot.list.filter(item=>{
-                        return new Date().getTime() - item.serverCreatedAt > this.fatal_time
-                    })])
+                    // this.fatal_services.push([...slot.list.filter(item=>{
+                    //     return new Date().getTime() - item.serverCreatedAt > this.fatal_time
+                    // })])
                 
                     let rectChosen =  d3.select('#slot-group').selectAll('.slot-rect').filter((d,ind)=>{
                         return ind == i
