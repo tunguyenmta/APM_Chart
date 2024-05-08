@@ -24,7 +24,7 @@ let ramUsage = Math.floor(Math.random() * 70)+30;
 let cpuUsage = Math.floor(Math.random() * 70)+30;
 let selectedIndices = new Set();
 timeUpdate = 3500
-
+let servicesNameList = ["IDRSOFT소개", "IDRSOFT일정", "행정자료","알림", "참여마당", "행사일정", "학술자료", "스케일", "유틸", "문화행사", "민원안내", "조직도", "정보공개", "소통참여", "정책참여", "나눔장터", "찾아오시는길","소통공간","일자리","마이페이지"]
 if(args[0] == 'normal'){
     ratio = .6
 } else if(args[0] == 'slow'){
@@ -54,7 +54,7 @@ wss.on('connection', (ws) => {
     for (let i = 0; i < numServicesToGenerate; i++) {
         const service = {
             id: Math.floor(Math.random() * 1000000),
-            name: `서비스 ${Math.floor(Math.random() * 20)+1}`, // Randomly assign service name between 'Service 1' to 'Service 20'
+            name: servicesNameList[Math.floor(Math.random() * 20)], // Randomly assign service name between 'Service 1' to 'Service 20'
             state: 'new',
             createdAt: new Date().getTime(),
             serverCreatedAt: new Date().getTime()+ Math.floor(Math.random() * 2000) + 2000,
