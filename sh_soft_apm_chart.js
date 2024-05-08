@@ -1888,7 +1888,7 @@ this.showActive(activeGroup, animationGroup, '',service);
             text: count,
             fontSize: 10,
             fontWeight: "bold",
-            x: 11,
+            x: count < 10 ? 11 : 8,
             y: 11.5,
             fill: 'white',
             opacity: 0,
